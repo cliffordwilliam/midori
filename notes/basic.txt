@@ -14,13 +14,12 @@ test_surface_rect.topleft = (0, 0)
 
 # get big surf -> chop a chunk -> set frames to said chunk
 # ERROR: libpng warning: iCCP: known incorrect sRGB profile -> go to aseprite -> ctrl p -> convert to sRGB color profile
-player_sprite_sheet_surface = pg.image.load("SpriteSheet.png").convert_alpha()
+player_sprite_surface = pg.image.load("SpriteSheet.png").convert_alpha()
 region_rect = pg.Rect(0, 0, 16, 16)
-player_sprite_1_surface = player_sprite_sheet_surface.subsurface(region_rect)
+player_rect = pg.Rect(0, 0, 16, 16)
 
 # rect represent position data -> need to position surface? get a rect for it -> easier to position things
-player_sprite_1_surface_rect = player_sprite_1_surface.get_rect()
-player_sprite_1_surface_rect.bottomright = (317, 174)
+player_rect.bottomright = (317, 174)
 
 # there is a sprite class, this exists to group surface + its rect -> so its easy to move it
 
@@ -58,23 +57,27 @@ while 1:
     display_surface.fill("blue4")
 
     # update
-    is_collide = player_sprite_1_surface_rect.colliderect(
+    is_collide = player_rect.colliderect(
         test_surface_rect)  # 1 / 0
     distance = 1 - is_collide
-    player_sprite_1_surface_rect.x -= distance
+    player_rect.x -= distance
 
     # render
     # surfaces -> display_surface
     display_surface.blit(test_surface, test_surface_rect)
     display_surface.blit(text_surface, (0, 0))
-    display_surface.blit(player_sprite_1_surface, player_sprite_1_surface_rect)
+    display_surface.blit(
+        player_sprite_surface,
+        player_rect.topleft,
+        region_rect
+    )
 
     # rects -> display_surface
     pg.draw.rect(display_surface, "yellow", yellow_rect)
 
     # mouse on player_sprite_1_surface_rect?
     mouse_position = pg.mouse.get_pos()
-    if player_sprite_1_surface_rect.collidepoint(mouse_position):
+    if player_rect.collidepoint(mouse_position):
         print("ON")
 
     pg.display.update()

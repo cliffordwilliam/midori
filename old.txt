@@ -1,0 +1,80 @@
+import pygame as pg
+from sys import exit
+
+# pg init
+pg.init()
+display_surface = pg.display.set_mode((317, 174))
+clock = pg.time.Clock()
+
+# test_surface
+test_surface = pg.Surface((16, 174))
+test_surface.fill("red")
+test_surface_rect = test_surface.get_rect()
+test_surface_rect.topleft = (0, 0)
+
+# get big surf -> chop a chunk -> set frames to said chunk
+# ERROR: libpng warning: iCCP: known incorrect sRGB profile -> go to aseprite -> ctrl p -> convert to sRGB color profile
+player_sprite_sheet_surface = pg.image.load("SpriteSheet.png").convert_alpha()
+region_rect = pg.Rect(0, 0, 16, 16)
+player_sprite_1_surface = player_sprite_sheet_surface.subsurface(region_rect)
+
+# rect represent position data -> need to position surface? get a rect for it -> easier to position things
+player_sprite_1_surface_rect = player_sprite_1_surface.get_rect()
+player_sprite_1_surface_rect.bottomright = (317, 174)
+
+# there is a sprite class, this exists to group surface + its rect -> so its easy to move it
+
+# rect -> pos data for anything -> rect can also check collision
+yellow_rect = pg.Rect(0, 0, 16, 16)
+yellow_rect.topright = (317, 0)
+
+# text_surface
+font = pg.font.Font("cg-pixel-3x5.ttf", 5)
+text_surface = font.render("Text", False, "white")
+
+
+while 1:
+    # max 60 fps
+    clock.tick(60)
+
+    # window closed? quit
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            pg.quit()
+            exit()
+
+    # get input anywhere
+    # Input.is_action_pressed("jump") -> mapping {"jump": pg.K_SPACE}
+    if pg.key.get_pressed()[pg.K_SPACE]:
+        print("space held")
+    # Input.is_action_just_pressed ("jump")
+    if pg.key.get_just_pressed()[pg.K_a]:
+        print("a just pressed")
+    # Input.is_action_just_released ("jump")
+    if pg.key.get_just_released()[pg.K_b]:
+        print("b just released")
+
+    # clear display_surface
+    display_surface.fill("blue4")
+
+    # update
+    is_collide = player_sprite_1_surface_rect.colliderect(
+        test_surface_rect)  # 1 / 0
+    distance = 1 - is_collide
+    player_sprite_1_surface_rect.x -= distance
+
+    # render
+    # surfaces -> display_surface
+    display_surface.blit(test_surface, test_surface_rect)
+    display_surface.blit(text_surface, (0, 0))
+    display_surface.blit(player_sprite_1_surface, player_sprite_1_surface_rect)
+
+    # rects -> display_surface
+    pg.draw.rect(display_surface, "yellow", yellow_rect)
+
+    # mouse on player_sprite_1_surface_rect?
+    mouse_position = pg.mouse.get_pos()
+    if player_sprite_1_surface_rect.collidepoint(mouse_position):
+        print("ON")
+
+    pg.display.update()

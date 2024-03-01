@@ -34,14 +34,23 @@ while 1:
             pg.quit()
             exit()
 
-    # Get input
+    # Get input anywhere
+    if pg.key.get_pressed()[pg.K_SPACE]:
+        print("space held")
+
+    if pg.key.get_just_pressed()[pg.K_a]:
+        print("a just pressed")
+
+    if pg.key.get_just_released()[pg.K_b]:
+        print("b just released")
 
     # Clear display_surface
     display_surface.fill("blue4")
 
     # Update
 
-    # Render
+    # render
+    # surfaces -> display_surface
     display_surface.blit(text_surface, (0, 0))
     display_surface.blit(
         sprite_sheet_surface,

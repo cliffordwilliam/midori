@@ -4,10 +4,10 @@ from os import path
 
 # Pg init
 pg.init()
-display_surface = pg.display.set_mode((360, 198))
+display_surface = pg.display.set_mode((462, 258))
 clock = pg.time.Clock()
 
-# player sprite data
+# Player sprite data
 player_frame = 0
 player_frames_list = [
     pg.Rect(360, 0, 24, 24),
@@ -18,10 +18,6 @@ player_rect = pg.Rect(0, 0, 24, 24)
 # Load sprite sheet
 sprite_sheet_path = path.join('sprite_sheets', 'sprite_sheet.png')
 sprite_sheet_surface = pg.image.load(sprite_sheet_path).convert_alpha()
-
-# Text_surface
-font = pg.font.Font("cg-pixel-3x5.ttf", 5)
-text_surface = font.render("Text", False, "white")
 
 
 while 1:
@@ -42,7 +38,6 @@ while 1:
     # Update
 
     # Render
-    display_surface.blit(text_surface, (0, 0))
     display_surface.blit(
         sprite_sheet_surface,
         player_rect.topleft,

@@ -191,17 +191,15 @@ while True:
         # Better than looping over 20 actors here again
         # 190 -> 80 is a good improvement
         actor.color = "red"
-        for collision in collisions:
-            # Collided?
-            if actor.rect.colliderect(collision):
-                # Undo previous frame displacement
-                actor.rect.x -= actor.velocity[0]
-                actor.rect.y -= actor.velocity[1]
-                # Flip velocity
-                actor.velocity[0] *= -1
-                actor.velocity[1] *= -1
-                # show collision
-                actor.color = "green"
+        if len(actor.rect.collidelistall(collisions)):
+            # Undo previous frame displacement
+            actor.rect.x -= actor.velocity[0]
+            actor.rect.y -= actor.velocity[1]
+            # Flip velocity
+            actor.velocity[0] *= -1
+            actor.velocity[1] *= -1
+            # show collision
+            actor.color = "green"
 
     # QUADTREE
     # Show Quadtree structure (boundaries)

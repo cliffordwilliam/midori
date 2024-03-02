@@ -1,6 +1,8 @@
 import pygame
 import sys
 from os import path
+import json
+from datetime import datetime
 
 # Constants
 NATIVE_WIDTH = 432
@@ -26,6 +28,8 @@ ACTOR_TILE_HEIGHT = TILE_HEIGHT * 4
 ACTOR_TILE_SIZE = (ACTOR_TILE_WIDTH, ACTOR_TILE_HEIGHT)
 
 SPRITE_SHEET_PATH = path.join('sprite_sheets', 'sprite_sheet.png')
+
+ROOMS_DIR_NAME = "rooms"
 
 # Initialize
 pygame.init()
@@ -1000,6 +1004,8 @@ class LevelMakerScene():
         # Creation data
         self.creation_data = []
 
+        self.clicked = False
+
     def input(self, event):
         pass
 
@@ -1009,6 +1015,9 @@ class LevelMakerScene():
         is_left_mouse_button_pressed = mouse_buttons_pressed_list[0]
         is_middle_mouse_button_pressed = mouse_buttons_pressed_list[1]
         is_right_mouse_button_pressed = mouse_buttons_pressed_list[2]
+
+        if self.old_mouse_buttons_pressed_list[0] == True and is_left_mouse_button_pressed == False:
+            self.clicked = False
 
         # Get mouse position - many people needs this - GLOBAL
         mouse_position_vector = get_mouse_position_vector()
@@ -1142,9 +1151,6 @@ class LevelMakerScene():
             pygame.FRect(0, 0, card_width, card_height)
         )
 
-        # Click blocker
-        clicked_layer = 0
-
         # Get add layer button rect
         add_layer_rect = pygame.FRect(
             0,
@@ -1189,7 +1195,7 @@ class LevelMakerScene():
         )
 
         # Handle layer item clicks
-        if clicked_layer < 1:
+        if self.clicked == False:
             # Mouse position is on this layer item?
             if add_layer_rect.collidepoint(mouse_position_vector):
                 # Handle left is just pressed
@@ -1199,6 +1205,8 @@ class LevelMakerScene():
 
                     # Move the current selected layer to the new one
                     self.current_layer_index = len(self.groups) - 1
+
+                    self.clicked = True
 
         # Get del layer button rect
         del_layer_rect = pygame.FRect(
@@ -1244,7 +1252,7 @@ class LevelMakerScene():
         )
 
         # Handle layer item clicks
-        if clicked_layer < 1:
+        if self.clicked == False:
             # Mouse position is on this layer item?
             if del_layer_rect.collidepoint(mouse_position_vector):
                 # Handle left is just pressed
@@ -1257,6 +1265,8 @@ class LevelMakerScene():
 
                         # Delete the latest layer
                         self.groups.pop()
+
+                    self.clicked = True
 
         # Read layers
         for layer_group_index, group in enumerate(self.groups):
@@ -1279,14 +1289,14 @@ class LevelMakerScene():
                 # Draw the layer rect
                 pygame.draw.rect(
                     native_surface,
-                    "white",
+                    "red",
                     layer_rect,
                 )
 
                 # Draw the layer rect border
                 pygame.draw.rect(
                     native_surface,
-                    "red",
+                    "white",
                     layer_rect,
                     1
                 )
@@ -1294,14 +1304,14 @@ class LevelMakerScene():
                 # Draw the layer rect
                 pygame.draw.rect(
                     native_surface,
-                    "red",
+                    "grey40",
                     layer_rect,
                 )
 
                 # Draw the layer rect border
                 pygame.draw.rect(
                     native_surface,
-                    "white",
+                    "grey50",
                     layer_rect,
                     1
                 )
@@ -1313,7 +1323,7 @@ class LevelMakerScene():
                 layer_number_text_surface = self.font.render(
                     f"Layer {layer_group_index}",
                     False,
-                    "red"
+                    "white"
                 )
             else:
                 layer_number_text_surface = self.font.render(
@@ -1333,13 +1343,13 @@ class LevelMakerScene():
             )
 
             # Handle layer item clicks
-            if clicked_layer < 1:
+            if self.clicked == False:
                 # Mouse position is on this layer item?
                 if layer_rect.collidepoint(mouse_position_vector):
                     # Handle left is just pressed
                     if is_left_mouse_button_pressed and mouse_buttons_pressed_list != self.old_mouse_buttons_pressed_list:
                         self.current_layer_index = layer_group_index
-                        clicked_layer = 1
+                        self.clicked = True
 
         # Read available menu items
         for menu_data_index, menu_data in enumerate(self.sprite_sheet_data_list):
@@ -1394,16 +1404,16 @@ class LevelMakerScene():
                 button_icon_rect
             )
             # Handle menu item clicks
-            if clicked_layer < 1:
+            if self.clicked == False:
                 # Mouse position is on this menu?
                 if button_icon_rect.collidepoint(mouse_position_vector):
                     # Handle left is just pressed
                     if is_left_mouse_button_pressed and mouse_buttons_pressed_list != self.old_mouse_buttons_pressed_list:
                         self.selected_item = menu_data_index
-                        clicked_layer = 1
+                        self.clicked = True
 
         # Handle grid clicks
-        if clicked_layer == 0:
+        if self.clicked == False:
             # Handle is left pressed
             if is_left_mouse_button_pressed:
                 # Check local storage if this cell is occupied
@@ -1453,19 +1463,37 @@ class LevelMakerScene():
             # Handle is right pressed
             elif is_right_mouse_button_pressed:
                 # Check local storage if this cell is occupied
-                for to_be_killed_sprite_data in self.creation_data:
-                    if to_be_killed_sprite_data["layer"] == self.current_layer_index:
-                        if pygame.math.Vector2(to_be_killed_sprite_data["left"], to_be_killed_sprite_data["top"]) == mouse_position_vector_with_camera_offset_snapped:
-                            to_be_killed_sprite_data["instance"].kill()
+                to_be_killed_sprite_data = None
+                for sprite_data in self.creation_data:
+                    if sprite_data["layer"] == self.current_layer_index:
+                        if pygame.math.Vector2(sprite_data["left"], sprite_data["top"]) == mouse_position_vector_with_camera_offset_snapped:
+                            sprite_data["instance"].kill()
                             self.creation_data = list(filter(lambda data: data["layer"] != self.current_layer_index or pygame.math.Vector2(
                                 data["left"], data["top"]) != mouse_position_vector_with_camera_offset_snapped, self.creation_data))
+                            to_be_killed_sprite_data = sprite_data
                             break
 
                 # Handle autotile
-                self.handle_autotile(to_be_killed_sprite_data)
+                if to_be_killed_sprite_data:
+                    self.handle_autotile(to_be_killed_sprite_data)
 
         # Update for next frame
         self.old_mouse_buttons_pressed_list = mouse_buttons_pressed_list
+
+        # Save button
+        if pygame.key.get_just_pressed()[pygame.K_a]:
+            # Remove instance
+            modified_creation_data = [{k: v for k, v in data.items(
+            ) if k != "instance"} for data in self.creation_data]
+
+            # Generate file name
+            current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            filename = f"room_{current_time}.json"
+            file_path = path.join(ROOMS_DIR_NAME, filename)
+
+            # Save to json
+            with open(file_path, "x") as json_file:
+                json.dump(modified_creation_data, json_file)
 
     def change_state(self, state):
         # Get mouse position - many people needs this
@@ -1495,20 +1523,20 @@ class LevelMakerScene():
         # Handle extra autotile logic
         if to_be_added_or_removed_spirte_data["type"] == "Autotile":
             for sprite_data in self.creation_data:
-                if sprite_data["type"] == "Autotile":
+                # prepare this tile data
+                instance = sprite_data["instance"]
+                layer = sprite_data["layer"]
+                left = sprite_data["left"]
+                top = sprite_data["top"]
+                tile_type = sprite_data["type"]
+
+                if tile_type == "Autotile" and layer == self.current_layer_index:
                     # Prepare mask
                     mask = [
                         [0, 0, 0],
                         [0, 1, 0],
                         [0, 0, 0]
                     ]
-
-                    # prepare this tile data
-                    instance = sprite_data["instance"]
-                    layer = self.current_layer_index
-                    left = sprite_data["left"]
-                    top = sprite_data["top"]
-                    tile_type = sprite_data["type"]
 
                     for other_sprite_data in self.creation_data:
                         # Get other sprite data

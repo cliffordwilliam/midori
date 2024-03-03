@@ -185,6 +185,10 @@ class TestScene():
 class LevelMakerScene():
     """Segregate the main loop"""
 
+    # TODO: The input logic is horrible, you check where the mouse is and then handle clicks - set a state on where a mouse is and use that to segregate input
+
+    # TODO: The data you save is not useful, why save the size of the sprite sheet? save the sprite sheet that is being used and the size of the tile, region, and maybe add animation too
+
     def __init__(self):
         # Menu data
         self.sprite_sheet_data_list = [
